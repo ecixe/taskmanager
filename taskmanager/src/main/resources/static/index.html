@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="taskManager">
+  <h1>Xoş Gəlmisiniz, <span id="username"></span></h1>
+  <h1>Task Manager</h1>
+
+  <!-- Axtarış və Filter Hissəsi -->
+  <div id="searchSection">
+    <input type="text" id="searchInput" placeholder="Search by title or description" oninput="searchTasks()">
+    <div class="radio-group">
+      <label>
+        <input type="radio" name="statusFilter" value="all" checked onchange="searchTasks()"> All
+      </label>
+      <label>
+        <input type="radio" name="statusFilter" value="completed" onchange="searchTasks()"> Completed
+      </label>
+      <label>
+        <input type="radio" name="statusFilter" value="notCompleted" onchange="searchTasks()"> Not Completed
+      </label>
+    </div>
+    <button onclick="logout()" class="logout-btn">LOGOUT</button>
+  </div>
+
+  <!-- Taskları Yaratmaq Üçün Düymə -->
+  <button class="create-task-btn" onclick="openCreateModal()">Create New Task</button>
+  <!-- Taskların Görünüşü -->
+  <div id="taskList"></div>
+</div>
+
+<!-- Task Create/Edit Modal -->
+<div id="taskModal" class="modal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Create/Edit Task</h2>
+    <input type="text" id="taskTitle" placeholder="Task Title">
+    <textarea id="taskDescription" placeholder="Task Description"></textarea>
+    <button onclick="saveTask()">Save Task</button>
+    <button onclick="closeCreateEditModal()">Close</button>
+  </div>
+</div>
+
+<!-- Task Detallarını Göstərmək Üçün Modal -->
+<div id="taskDetailsModal" class="modal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeDetailsModal()">✖</button>
+    <h2 id="modalTaskTitle"></h2>
+    <p id="modalTaskDescription"></p>
+    <p><strong>Status:</strong> <span id="modalTaskStatus"></span></p>
+  </div>
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>
