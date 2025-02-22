@@ -126,7 +126,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
         if (token.startsWith("Bearer ")) {
-            token = token.substring(7); // "Bearer " hissəsini silirik
+            token = token.substring(7);
         }
         jwtUtil.invalidateToken(token);
         return ResponseEntity.ok("Çıxış edildi, token bloklandı.");
