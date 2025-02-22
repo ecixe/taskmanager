@@ -22,7 +22,7 @@ public class EmailService {
 
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(body, true); // HTML format dəstəklənir
+            helper.setText(body, true);
 
             mailSender.send(message);
             System.out.println("Email uğurla göndərildi!");

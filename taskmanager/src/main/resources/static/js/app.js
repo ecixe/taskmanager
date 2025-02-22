@@ -1,5 +1,3 @@
-
-
 const taskListElement = document.getElementById("taskList");
 const taskModal = document.getElementById("taskModal");
 const taskDetailsModal = document.getElementById("taskDetailsModal");
@@ -12,14 +10,13 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("Username:", username); // Debug üçün
     document.getElementById("username").textContent = username;
 })
-// Taskları əldə et və render et
 function fetchTasks() {
     fetch(`http://localhost:9090/taskmanager/tasks/all`,
         {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("token") // Əgər JWT istifadə edirsənsə
+            "Authorization": "Bearer " + localStorage.getItem("token")
         }
 
     })
@@ -35,7 +32,6 @@ function fetchTasks() {
 }
 
 
-// Taskları ekranda göstərmək
 function renderTasks(filteredTasks) {
     taskListElement.innerHTML = "";
     filteredTasks.forEach((task) => {
@@ -66,7 +62,6 @@ function renderTasks(filteredTasks) {
     });
 }
 
-// Task redaktəsi üçün modalı açmaq
 function editTask(taskId) {
     const task = tasks.find((task) => task.id === taskId);
     taskTitleInput.value = task.title;
@@ -77,7 +72,6 @@ function editTask(taskId) {
     taskModal.style.display = "flex";
 }
 
-// Taskı yaratmaq və ya redaktə etmək
 function saveTask() {
     const title = taskTitleInput.value.trim();
     const description = taskDescriptionInput.value.trim();
@@ -90,8 +84,8 @@ function saveTask() {
     const task = { title, description };
 
     const url = editTaskId === null
-        ? "http://localhost:9090/taskmanager/tasks/create"  // Yeni task yaradanda
-        : `http://localhost:9090/taskmanager/tasks/update/${editTaskId}`;  // Task redaktə edəndə
+        ? "http://localhost:9090/taskmanager/tasks/create"
+        : `http://localhost:9090/taskmanager/tasks/update/${editTaskId}`;
 
     const method = editTaskId === null ? "POST" : "PUT";
 
@@ -99,7 +93,7 @@ function saveTask() {
         method: method,
         headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("token") // ✅ Token əlavə olundu
+            "Authorization": "Bearer " + localStorage.getItem("token")
         },
         body: JSON.stringify(task),
     })
@@ -118,7 +112,6 @@ function saveTask() {
 }
 
 
-// Taskı silmək
 function deleteTask(taskId) {
     if (!confirm("Bu taskı silmək istədiyinizə əminsiniz?")) return;
 
@@ -140,13 +133,13 @@ function deleteTask(taskId) {
 
 function toggleTaskCompletion(taskId, checkbox) {
     const task = tasks.find((task) => task.id === taskId);
-    task.completed = checkbox.checked; // ✅ Taskın tamamlanma statusunu dəyiş
+    task.completed = checkbox.checked;
 
     fetch(`http://localhost:9090/taskmanager/tasks/update/${taskId}`, {
         method: 'PUT',
         headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("token") // ✅ Token əlavə olundu
+            "Authorization": "Bearer " + localStorage.getItem("token")
         },
         body: JSON.stringify(task)
     })
@@ -157,9 +150,7 @@ function toggleTaskCompletion(taskId, checkbox) {
         .catch(error => console.error("Error:", error));
 }
 
-// Taskın tamamlanma statusunu dəyişmək
 
-// Task detallarını göstərmək
 function showTaskDetails(taskId) {
     const task = tasks.find((task) => task.id === taskId);
     document.getElementById("modalTaskTitle").textContent = task.title;
@@ -168,17 +159,14 @@ function showTaskDetails(taskId) {
     taskDetailsModal.style.display = "flex";
 }
 
-// Task create/edit modalını bağlamaq
 function closeCreateEditModal() {
     taskModal.style.display = "none";
 }
 
-// Task details modalını bağlamaq
 function closeDetailsModal() {
     taskDetailsModal.style.display = "none";
 }
 
-// Yeni task yaratmaq üçün modalı açmaq
 function openCreateModal() {
     taskTitleInput.value = "";
     taskDescriptionInput.value = "";
@@ -187,7 +175,6 @@ function openCreateModal() {
     taskModal.style.display = "flex";
 }
 
-// Axtarış etmək
 function searchTasks() {
     const searchTerm = document.getElementById("searchInput").value.toLowerCase();
     const statusFilter = document.querySelector("input[name='statusFilter']:checked").value;
@@ -215,7 +202,7 @@ async function logout() {
     }).then(response => {
         if (response.ok) {
             localStorage.removeItem('token'); // Tokeni sil
-            window.location.href = "http://localhost:63342/taskmanager/static/login.html"; // Login səhifəsinə yönləndir
+            window.location.href = "http://localhost:63342/taskmanager/static/login.html";
         }
     });
 
@@ -250,9 +237,9 @@ async function login() {
         } else {
             localStorage.setItem("username", "İstifadəçi");
         }
-        console.log(document.getElementById("username")); // Əgər 'null' olsa, element səhvdir.
+        console.log(document.getElementById("username"));
 
-        window.location.href = "index.html"; // Əsas səhifəyə yönləndir
+        window.location.href = "index.html";
 
     } catch (error) {
         errorMessage.innerText = error.message;
@@ -280,51 +267,20 @@ async function register() {
             body: JSON.stringify({ username, password, email })
         });
 
-        const data = await response.text(); // Server text cavab qaytara bilər
+        const data = await response.text();
 
         if (!response.ok) {
             throw new Error(data || "Registration failed");
         }
 
         alert("Registration successful! Please check your email for confirmation.");
-        window.location.href = "login.html"; // Qeydiyyatdan sonra login səhifəsinə yönləndir
+        window.location.href = "login.html";
 
     } catch (error) {
         errorMessage.innerText = error.message;
     }
 }
 
-// async function logout() {
-//     const token = localStorage.getItem("token");
-//
-//     if (!token) {
-//         alert("You are not logged in!");
-//         return;
-//     }
-//
-//     try {
-//         const response = await fetch("http://localhost:9090/taskmanager/auth/logout", {
-//             method: "POST",
-//             headers: {
-//                 "Authorization": "Bearer " + token
-//             }
-//         });
-//
-//         if (!response.ok) {
-//             throw new Error("Logout failed");
-//         }
-//
-//         localStorage.removeItem("token");
-//         alert("You have been logged out.");
-//         window.location.href = "login.html"; // Çıxışdan sonra login səhifəsinə yönləndir
-//
-//     } catch (error) {
-//         alert(error.message);
-//     }
-// }
 
-
-
-// Başlanğıcda taskları yüklə
 fetchTasks();
 

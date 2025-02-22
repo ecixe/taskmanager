@@ -19,8 +19,8 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
     @Column(name = "email_active")
-    private boolean enabled = false;  // Email təsdiqlənənə qədər false olacaq
-    private String role = "ROLE_USER";  // Default rol
+    private boolean enabled = false;
+    private String role = "ROLE_USER";
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }

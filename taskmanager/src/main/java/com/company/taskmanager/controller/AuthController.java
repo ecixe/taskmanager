@@ -1,6 +1,6 @@
 package com.company.taskmanager.controller;
 
-import com.company.taskmanager.requestandresponse.AuthRequest;
+import com.company.taskmanager.request.AuthRequest;
 import com.company.taskmanager.entity.User;
 import com.company.taskmanager.repository.UserRepository;
 import com.company.taskmanager.service.CustomUserDetailsService;
@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,7 +44,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody AuthRequest request) {
-        // İstifadəçi artıq mövcuddursa, xətanı qaytar
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email already registered");
@@ -55,7 +53,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Email is required");
         }
 
-        // Yeni istifadəçi yarat
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
@@ -64,7 +61,6 @@ public class AuthController {
 
         userRepository.save(user);
 
-        // Email təsdiqləmə linki (encode edilmiş)
         String encodedEmail = URLEncoder.encode(request.getEmail(), StandardCharsets.UTF_8);
         String confirmLink = "http://localhost:9090/taskmanager/auth/confirm?email=" + encodedEmail;
         String emailBody = "Zəhmət olmasa, emailinizi təsdiqləmək üçün bu linkə daxil olun: <a href=\"" + confirmLink + "\">Təsdiqlə</a>";
@@ -92,11 +88,10 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(authentication.getName());
 
-        // Burada user məlumatlarını alırıq
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (!user.isEnabled()) { // Email aktiv deyilsə login icazə vermirik
+        if (!user.isEnabled()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email not verified");
         }
 
@@ -104,7 +99,7 @@ public class AuthController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        response.put("username", user.getUsername()); // İstifadəçi adını da qaytarırıq
+        response.put("username", user.getUsername());
 
         return ResponseEntity.ok(response);
     }

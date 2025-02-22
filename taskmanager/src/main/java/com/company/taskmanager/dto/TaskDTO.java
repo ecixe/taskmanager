@@ -1,6 +1,4 @@
 package com.company.taskmanager.dto;
-
-import lombok.Data;
 import org.springframework.stereotype.Component;
 
 @Component
