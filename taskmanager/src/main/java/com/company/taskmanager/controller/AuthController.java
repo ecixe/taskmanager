@@ -133,9 +133,17 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+<<<<<<< HEAD
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
         String jwtToken = token.replace("Bearer ", ""); // "Bearer " hissəsini sil
         jwtUtil.invalidateToken(jwtToken); // Tokeni bloklamaq üçün
+=======
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        jwtUtil.invalidateToken(token);
+>>>>>>> 4c84094383f4cadc00a0332481e64d41592b400e
         return ResponseEntity.ok("Çıxış edildi, token bloklandı.");
     }
 
