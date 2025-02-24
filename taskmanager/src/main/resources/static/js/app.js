@@ -1,40 +1,100 @@
-const taskListElement = document.getElementById("taskList");
 const taskModal = document.getElementById("taskModal");
 const taskDetailsModal = document.getElementById("taskDetailsModal");
 const taskTitleInput = document.getElementById("taskTitle");
 const taskDescriptionInput = document.getElementById("taskDescription");
+const taskListElement = document.getElementById("taskList");
 let tasks = [];
 let editTaskId = null;
-document.addEventListener("DOMContentLoaded", function() {
-    const username = localStorage.getItem("username") || "Qonaq";
-    console.log("Username:", username); // Debug üçün
-    document.getElementById("username").textContent = username;
-})
-function fetchTasks() {
-    fetch(`http://localhost:9090/taskmanager/tasks/all`,
-        {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("token")
+
+// **Login səhifəsində avtomatik yenilənmənin qarşısını almaq**
+document.addEventListener("DOMContentLoaded", function () {
+    const usernameElement = document.getElementById("username");
+    if (usernameElement) {
+        const username = localStorage.getItem("username") || "Qonaq";
+        usernameElement.textContent = username;
+    }
+
+    // **Əgər login səhifəsindəyiksə, `fetchTasks()` çağırma**
+    if (!window.location.href.includes("login.html")) {
+        fetchTasks();
+    }
+});
+
+
+// **Taskları serverdən çəkmək**
+async function fetchTasks() {
+    const token = localStorage.getItem("token");
+
+    if (!token && !window.location.href.includes("register.html")) {
+        console.warn("Token tapılmadı! Login səhifəsinə yönləndirilir...");
+        window.location.href = "login.html";
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:9090/taskmanager/tasks/all", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache" // **Cache-i sıradan çıxarırıq**
+            }
+        });
+
+        if (response.status === 401) {
+            console.warn("Token müddəti bitib və ya səhvdir! Login səhifəsinə yönləndirilir...");
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+            return;
         }
 
-    })
+        if (!response.ok) throw new Error("Məlumatları əldə etmək mümkün olmadı");
 
-        .then((response) => response.json())
+        let data = await response.json();
 
-        .then((data) => {
-            tasks = data;
-            renderTasks(tasks);
-        })
-        .catch((error) => console.error("Xəta baş verdi:", error));
+        if (!Array.isArray(data)) {
+            console.error("Gələn data array formatında deyil!", data);
+            tasks = []; // Əgər düzgün array gəlməsə, boş massiv saxla.
+        } else {
+            // **Null dəyərləri silək və düzgün obyektləri götürək**
+            tasks = data
+                .filter(task => task !== null) // Null olanları çıx
+                .map(task => ({
+                    id: task.id,
+                    title: task.title || "Untitled Task",
+                    description: task.description || "No Description",
+                    completed: task.completed || false
+                }));
+        }
 
+        renderTasks(tasks);
+    } catch (error) {
+        console.error("Xəta:", error.message);
+    }
 }
 
 
-function renderTasks(filteredTasks) {
+
+function renderTasks(taskList) {
+    console.log("Gələn taskList:", taskList);
+
+    if (!taskList || !Array.isArray(taskList)) {
+        console.error("taskList düzgün massiv deyil!", taskList);
+        return;
+    }
+
+    if (!taskListElement) {
+        console.error("taskListElement tapılmadı!");
+        return;
+    }
+
     taskListElement.innerHTML = "";
-    filteredTasks.forEach((task) => {
+    taskList.forEach((task) => {
+        if (!task || !task.title) {
+            console.warn("Boş və ya səhv formatda task aşkarlandı:", task);
+            return;
+        }
+
         const taskElement = document.createElement("div");
         taskElement.classList.add("task");
         if (task.completed) {
@@ -43,14 +103,14 @@ function renderTasks(filteredTasks) {
 
         taskElement.innerHTML = `
             <div onclick="showTaskDetails(${task.id})">
-                <p class="task-title">${task.title}</p>
-                <p class="task-description">${task.description}</p>
+                <p class="task-title">${task.title || "Untitled Task"}</p>
+                <p class="task-description">${task.description || "No Description"}</p>
             </div>
             <div class="task-actions">
                 <input
                     type="checkbox"
                     id="checkbox-${task.id}"
-                    ${task.completed ? 'checked' : ''}
+                    ${task.completed ? "checked" : ""}
                     onchange="toggleTaskCompletion(${task.id}, this)"
                 >
                 <label for="checkbox-${task.id}">Completed</label>
@@ -62,6 +122,8 @@ function renderTasks(filteredTasks) {
     });
 }
 
+
+// Task redaktəsi üçün modalı açmaq
 function editTask(taskId) {
     const task = tasks.find((task) => task.id === taskId);
     taskTitleInput.value = task.title;
@@ -72,128 +134,146 @@ function editTask(taskId) {
     taskModal.style.display = "flex";
 }
 
-function saveTask() {
+
+// **Task yaratmaq və ya redaktə etmək**
+async function saveTask() {
     const title = taskTitleInput.value.trim();
     const description = taskDescriptionInput.value.trim();
 
-    if (title === "" || description === "") {
+    if (!title || !description) {
         alert("Task title and description cannot be empty!");
         return;
     }
 
     const task = { title, description };
+    const token = localStorage.getItem("token");
 
     const url = editTaskId === null
         ? "http://localhost:9090/taskmanager/tasks/create"
         : `http://localhost:9090/taskmanager/tasks/update/${editTaskId}`;
-
     const method = editTaskId === null ? "POST" : "PUT";
 
-    fetch(url, {
-        method: method,
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        body: JSON.stringify(task),
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            if (editTaskId === null) {
-                tasks.push(data);
-            } else {
-                const index = tasks.findIndex((t) => t.id === editTaskId);
-                tasks[index] = data;
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(task),
+        });
+
+        if (!response.ok) throw new Error("Task saxlanmadı!");
+
+        const savedTask = await response.json(); // **Backend-in qaytardığı taskı yoxlayırıq**
+        console.log("Yeni yaradılmış task:", savedTask);
+
+        setTimeout(fetchTasks, 500); // **500ms gecikmə ilə taskları yenilə**
+        closeCreateEditModal();
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+
+// **Taskı silmək**
+async function deleteTask(taskId) {
+    if (!confirm("Bu tapşırığı silmək istədiyinizə əminsiniz?")) return;
+
+    try {
+        const response = await fetch(`http://localhost:9090/taskmanager/tasks/${taskId}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
             }
-            renderTasks(tasks);
-            closeCreateEditModal();
-        })
-        .catch((error) => console.error("Error:", error));
+        });
+
+        if (!response.ok) throw new Error("Task silinmədi!");
+
+        await fetchTasks(); // **Əllə array-dən silmək əvəzinə, serverdən yenilə**
+    } catch (error) {
+        console.error("Xəta baş verdi:", error);
+    }
 }
 
+async function toggleTaskCompletion(taskId, checkbox) {
+    try {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) throw new Error("Task tapılmadı!");
 
-function deleteTask(taskId) {
-    if (!confirm("Bu taskı silmək istədiyinizə əminsiniz?")) return;
+        const updatedTask = {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            completed: checkbox.checked
+        };
 
-    fetch(`http://localhost:9090/taskmanager/tasks/${taskId}`, {
-        method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token") // ✅ Token əlavə olundu
+        const response = await fetch(`http://localhost:9090/taskmanager/tasks/update/${taskId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
+            },
+            body: JSON.stringify(updatedTask) // **Bütün məlumatları göndəririk**
+        });
+
+        if (!response.ok) throw new Error("Taskın tamamlanma statusu yenilənmədi!");
+
+        // Lokal massivi yenilə
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        if (taskIndex !== -1) {
+            tasks[taskIndex] = updatedTask;
+            renderTasks(tasks);
         }
-    })
-        .then(() => {
-            tasks = tasks.filter((task) => task.id !== taskId);
-            renderTasks(tasks);
-        })
-        .catch((error) => console.error("Xəta baş verdi:", error));
+    } catch (error) {
+        console.error("Error:", error);
+        checkbox.checked = !checkbox.checked; // Əgər səhv olarsa, əvvəlki vəziyyətə qaytar
+    }
 }
 
 
 
-
-function toggleTaskCompletion(taskId, checkbox) {
-    const task = tasks.find((task) => task.id === taskId);
-    task.completed = checkbox.checked;
-
-    fetch(`http://localhost:9090/taskmanager/tasks/update/${taskId}`, {
-        method: 'PUT',
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        body: JSON.stringify(task)
-    })
-        .then(response => response.json())
-        .then(() => {
-            renderTasks(tasks);
-        })
-        .catch(error => console.error("Error:", error));
-}
-
-
+// **Task detallarını göstərmək**
 function showTaskDetails(taskId) {
     const task = tasks.find((task) => task.id === taskId);
+    if (!task) return;
+
     document.getElementById("modalTaskTitle").textContent = task.title;
     document.getElementById("modalTaskDescription").textContent = task.description;
     document.getElementById("modalTaskStatus").textContent = task.completed ? "Completed" : "Not Completed";
     taskDetailsModal.style.display = "flex";
 }
 
-function closeCreateEditModal() {
-    taskModal.style.display = "none";
-}
-
-function closeDetailsModal() {
-    taskDetailsModal.style.display = "none";
-}
-
+// **Yeni task yaratmaq üçün modal açmaq**
 function openCreateModal() {
     taskTitleInput.value = "";
     taskDescriptionInput.value = "";
-    document.getElementById("modalTitle").textContent = "Create Task";
     editTaskId = null;
     taskModal.style.display = "flex";
 }
 
+// **Modal bağlamaq funksiyaları**
+function closeCreateEditModal() { taskModal.style.display = "none"; }
+function closeDetailsModal() { taskDetailsModal.style.display = "none"; }
+
+// **Axtarış funksiyası**
 function searchTasks() {
     const searchTerm = document.getElementById("searchInput").value.toLowerCase();
     const statusFilter = document.querySelector("input[name='statusFilter']:checked").value;
 
-    let filteredTasks = tasks.filter((task) => {
-        return (
-            task.title.toLowerCase().includes(searchTerm) ||
-            task.description.toLowerCase().includes(searchTerm)
-        );
-    });
+    let filteredTasks = tasks.filter(task =>
+        task.title.toLowerCase().includes(searchTerm) || task.description.toLowerCase().includes(searchTerm)
+    );
 
     if (statusFilter !== "all") {
         const isCompleted = statusFilter === "completed";
-        filteredTasks = filteredTasks.filter((task) => task.completed === isCompleted);
+        filteredTasks = filteredTasks.filter(task => task.completed === isCompleted);
     }
 
     renderTasks(filteredTasks);
 }
-async function logout() {
+
+function logout() {
     fetch('http://localhost:9090/taskmanager/auth/logout', {
         method: 'POST',
         headers: {
@@ -201,53 +281,65 @@ async function logout() {
         }
     }).then(response => {
         if (response.ok) {
-            localStorage.removeItem('token'); // Tokeni sil
-            window.location.href = "http://localhost:63342/taskmanager/static/login.html";
-        }
-    });
+            // **Token və username-i sil**
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
 
+            // **Login səhifəsinə yönləndir**
+            window.location.href = 'http://localhost:63342/taskmanager/static/login.html';
+        } else {
+            console.error("Logout failed");
+        }
+    }).catch(error => console.error("Error:", error));
 }
+
+let failedAttempts = 0; // Yanlış girişlərin sayını izləmək üçün
+
 async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const errorMessage = document.getElementById("errorMessage");
 
     try {
         const response = await fetch("http://localhost:9090/taskmanager/auth/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.message || "Login failed");
-        }
+            failedAttempts++; // Yanlış giriş sayını artır
+            document.getElementById("errorMessage").style.display = "block";
 
-        console.log("Login successful:", data);
-
-        localStorage.setItem("token", data.token);
-
-        if (data.username && data.username.trim() !== "") {
-            localStorage.setItem("username", data.username);
+            if (failedAttempts >= 3) {
+                document.getElementById("forgot-password").style.display = "block"; // "Şifrəni unutmusunuz?" düyməsini göstər
+            }
         } else {
-            localStorage.setItem("username", "İstifadəçi");
+            failedAttempts = 0; // Düzgün daxil olduqda sıfırla
+            const data = await response.json();
+            localStorage.setItem("token", data.token); // Yeni token saxla
+            localStorage.setItem("username", data.username);
+            console.log("Login successful:", data);
+
+            // Başqa səhifəyə yönləndirmək istəsən
+            window.location.href = "http://localhost:63342/taskmanager/static/index.html";
         }
-        console.log(document.getElementById("username"));
-
-        window.location.href = "index.html";
-
     } catch (error) {
-        errorMessage.innerText = error.message;
+        console.error("Xəta:", error);
     }
 }
 
 
-
+function forgotPassword() {
+    const email = prompt("Emailinizi daxil edin:");
+    if (email) {
+        fetch("http://localhost:9090/taskmanager/password/forgot-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+        }).then(() => alert("Email göndərildi!"))
+            .catch(() => alert("Xəta baş verdi!"));
+    }
+}
 async function register() {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
@@ -267,20 +359,62 @@ async function register() {
             body: JSON.stringify({ username, password, email })
         });
 
-        const data = await response.text();
+        const data = await response.text(); // Server text cavab qaytara bilər
 
         if (!response.ok) {
             throw new Error(data || "Registration failed");
         }
 
         alert("Registration successful! Please check your email for confirmation.");
-        window.location.href = "login.html";
+        window.location.href = "login.html"; // Qeydiyyatdan sonra login səhifəsinə yönləndir
 
     } catch (error) {
         errorMessage.innerText = error.message;
     }
 }
 
+function openPasswordModal() {
+    document.getElementById("passwordModal").style.display = "block";
+}
 
-fetchTasks();
+function closePasswordModal() {
+    document.getElementById("passwordModal").style.display = "none";
+}
 
+async function updatePassword() {
+    const currentPassword = document.getElementById("currentPassword").value.trim();
+    const newPassword = document.getElementById("newPassword").value.trim();
+    const confirmNewPassword = document.getElementById("confirmNewPassword").value.trim();
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+        alert("Bütün sahələri doldurun!");
+        return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+        alert("Yeni parollar uyğun gəlmir!");
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:9090/taskmanager/auth/update-password", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const result = await response.text();
+
+        if (!response.ok) {
+            throw new Error(result || "Parol dəyişdirilmədi!");
+        }
+
+        alert("Parol uğurla dəyişdirildi!");
+        closePasswordModal();
+    } catch (error) {
+        alert(error.message);
+    }
+}

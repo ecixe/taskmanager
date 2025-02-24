@@ -45,9 +45,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                // 🔴 Log əlavə et
+                System.out.println("Authenticated user: " + userDetails.getUsername());
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                System.out.println("JWT validation failed!");
             }
         }
+
 
         filterChain.doFilter(request, response);
     }

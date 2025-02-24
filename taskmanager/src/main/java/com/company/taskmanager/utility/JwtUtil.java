@@ -23,9 +23,6 @@ public class JwtUtil {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
-
-
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
@@ -47,10 +44,11 @@ public class JwtUtil {
     private Claims getClaims(String token) {
         try {
             return Jwts.parser()
-                    .setSigningKey(secretKey)
+                    .setSigningKey(getSigningKey()) // ✅ Doğru açar metodu
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+
         } catch (ExpiredJwtException e) {
             throw new RuntimeException("Token vaxtı bitib.");
         } catch (MalformedJwtException e) {

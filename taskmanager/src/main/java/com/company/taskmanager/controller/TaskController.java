@@ -8,6 +8,7 @@ import com.company.taskmanager.repository.TaskRepo;
 import com.company.taskmanager.repository.TaskRepository;
 import com.company.taskmanager.service.TaskService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.stream.*;
 import java.util.*;
@@ -25,6 +26,7 @@ public class TaskController {
         this.taskRepository = taskRepository;
     }
 
+    @Transactional
     @GetMapping("/all")
     public List<TaskDTO> getAllTasks() {
         List<Task> tasks = taskRepository.findAll();
@@ -48,6 +50,7 @@ public class TaskController {
         return tasks.stream().map(taskMapper::toDTO).collect(Collectors.toList());
     }
 
+    @Transactional
     @PostMapping("/create")
     public TaskDTO createTask(@RequestBody TaskDTO taskDTO) {
         Task task = taskMapper.toEntity(taskDTO);
@@ -55,6 +58,7 @@ public class TaskController {
         return taskMapper.toDTO(task);
     }
 
+    @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteTask(@PathVariable Integer id) {
         Task task = taskRepository.findById(id)
@@ -71,6 +75,7 @@ public class TaskController {
         return taskMapper.toDTO(task);
     }
 
+    @Transactional
     @PutMapping("/update/{id}")
     public TaskDTO updateTask(@PathVariable Integer id, @RequestBody Task task) {
         Task existingTask = taskRepository.findById(id)
@@ -78,6 +83,7 @@ public class TaskController {
 
         existingTask.setTitle(task.getTitle());
         existingTask.setDescription(task.getDescription());
+        existingTask.setCompleted(task.isCompleted());
 
         Task updatedTask = taskRepository.save(existingTask);
         return taskMapper.toDTO(updatedTask);

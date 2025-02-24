@@ -1,6 +1,7 @@
 package com.company.taskmanager.entity;
 
 import jakarta.persistence.*;
+import org.springframework.beans.factory.annotation.Value;
 
 @Entity
 public class Task {

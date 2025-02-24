@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -40,8 +41,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("auth/login","auth/register","http://localhost:63342/taskmanager/static/register.html","auth/logout","auth/send","auth/confirm").permitAll()
-                        .requestMatchers("tasks/**").authenticated()
+                        .requestMatchers("auth/login","auth/register","auth/reset-password","http://localhost:63342/taskmanager/static/reset-password.html","http://localhost:63342/taskmanager/static/register.html","auth/send","auth/confirm","password/**").permitAll()
+                        .requestMatchers("tasks/**","auth/logout","auth/update-password").authenticated()
                 )
                 .formLogin(form -> form.loginPage("http://localhost:63342/taskmanager/static/login.html"))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT Filter əlavə edirik

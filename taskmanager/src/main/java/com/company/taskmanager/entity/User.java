@@ -5,7 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "user")
@@ -19,8 +19,39 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
     @Column(name = "email_active")
-    private boolean enabled = false;
-    private String role = "ROLE_USER";
+    private boolean enabled = false;  // Email təsdiqlənənə qədər false olacaq
+    private String role = "ROLE_USER";  // Default rol
+    private int failedAttempts = 0;
+    private boolean locked = false;
+    private String resetToken;
+
+    public void generateResetToken() {
+        this.resetToken = UUID.randomUUID().toString();
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
