@@ -28,12 +28,10 @@ public class PasswordResetController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email tapılmadı"));
 
-        // Token yaratmaq
         String resetToken = UUID.randomUUID().toString();
         user.setResetToken(resetToken);
         userRepository.save(user);
 
-        // Email göndərmək
         sendEmail(user.getEmail(), resetToken);
 
         return ResponseEntity.ok("Email göndərildi!");
