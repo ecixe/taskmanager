@@ -59,7 +59,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Email is required");
         }
 
-        // Yeni istifadəçi yarat
+        
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
@@ -68,7 +68,7 @@ public class AuthController {
 
         userRepository.save(user);
 
-        // Email təsdiqləmə linki (encode edilmiş)
+        
         String encodedEmail = URLEncoder.encode(request.getEmail(), StandardCharsets.UTF_8);
         String confirmLink = "http://localhost:9090/taskmanager/auth/confirm?email=" + encodedEmail;
         String emailBody = "Zəhmət olmasa, emailinizi təsdiqləmək üçün bu linkə daxil olun: <a href=\"" + confirmLink + "\">Təsdiqlə</a>";
@@ -96,7 +96,7 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(authentication.getName());
 
-        // Burada user məlumatlarını alırıq
+    
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -133,17 +133,14 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-<<<<<<< HEAD
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
         String jwtToken = token.replace("Bearer ", ""); // "Bearer " hissəsini sil
-        jwtUtil.invalidateToken(jwtToken); // Tokeni bloklamaq üçün
-=======
+        jwtUtil.invalidateToken(jwtToken);
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
         jwtUtil.invalidateToken(token);
->>>>>>> 4c84094383f4cadc00a0332481e64d41592b400e
         return ResponseEntity.ok("Çıxış edildi, token bloklandı.");
     }
 
