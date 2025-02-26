@@ -23,7 +23,7 @@ public class MailtrapTest {
             System.out.println("✅ SMTP bağlantısı uğurla quruldu!");
             transport.close();
         } catch (Exception e) {
-            System.out.println("❌ SMTP bağlantısı alınmadı: " + e.getMessage());
+            System.out.println("SMTP bağlantısı alınmadı: " + e.getMessage());
         }
     }
 }
