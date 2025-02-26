@@ -11,7 +11,7 @@
   <h1>Xoş Gəlmisiniz, <span id="username"></span></h1>
   <h1>Task Manager</h1>
 
-  <!-- Axtarış və Filter Hissəsi -->
+
   <div id="searchSection">
     <input type="text" id="searchInput" placeholder="Search by title or description" oninput="searchTasks()">
     <div class="radio-group">
@@ -28,11 +28,11 @@
     <button onclick="logout()" class="logout-btn">LOGOUT</button>
   </div>
 
-  <!-- Taskları Yaratmaq Üçün Düymə -->
+
   <button class="create-task-btn" onclick="openCreateModal()">Create New Task</button>
-  <!-- Taskların Görünüşü -->
+  
   <div id="taskList"></div>
-  <!-- Şifrə Yeniləmə Button -->
+  
   <button onclick="openPasswordModal()">Şifrəni Dəyiş</button>
   <div id="passwordModal" style="display:none;">
     <h2>Change Password</h2>
@@ -44,7 +44,7 @@
   </div>
 </div>
 
-<!-- Task Create/Edit Modal -->
+
 <div id="taskModal" class="modal">
   <div class="modal-content">
     <h2 id="modalTitle">Create/Edit Task</h2>
@@ -57,7 +57,7 @@
 
 
 
-<!-- Task Detallarını Göstərmək Üçün Modal -->
+
 <div id="taskDetailsModal" class="modal">
   <div class="modal-content">
     <button class="close-btn" onclick="closeDetailsModal()">✖</button>
