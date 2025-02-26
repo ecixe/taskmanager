@@ -5,7 +5,7 @@ public class AuthRequest {
     private String email;
     private String password;
 
-    // Constructor
+
     public AuthRequest() {}
 
     public AuthRequest(String email, String password) {
@@ -21,7 +21,7 @@ public class AuthRequest {
         this.username = username;
     }
 
-    // Getter və Setter metodları
+
     public String getEmail() {
         return email;
     }
