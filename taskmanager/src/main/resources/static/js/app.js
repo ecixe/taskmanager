@@ -6,7 +6,7 @@ const taskListElement = document.getElementById("taskList");
 let tasks = [];
 let editTaskId = null;
 
-// **Login səhifəsində avtomatik yenilənmənin qarşısını almaq**
+
 document.addEventListener("DOMContentLoaded", function () {
     const usernameElement = document.getElementById("username");
     if (usernameElement) {
@@ -14,14 +14,13 @@ document.addEventListener("DOMContentLoaded", function () {
         usernameElement.textContent = username;
     }
 
-    // **Əgər login səhifəsindəyiksə, `fetchTasks()` çağırma**
     if (!window.location.href.includes("login.html")) {
         fetchTasks();
     }
 });
 
 
-// **Taskları serverdən çəkmək**
+
 async function fetchTasks() {
     const token = localStorage.getItem("token");
 
@@ -37,7 +36,7 @@ async function fetchTasks() {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json",
-                "Cache-Control": "no-cache" // **Cache-i sıradan çıxarırıq**
+                "Cache-Control": "no-cache"
             }
         });
 
@@ -54,11 +53,11 @@ async function fetchTasks() {
 
         if (!Array.isArray(data)) {
             console.error("Gələn data array formatında deyil!", data);
-            tasks = []; // Əgər düzgün array gəlməsə, boş massiv saxla.
+            tasks = []; 
         } else {
-            // **Null dəyərləri silək və düzgün obyektləri götürək**
+            
             tasks = data
-                .filter(task => task !== null) // Null olanları çıx
+                .filter(task => task !== null)
                 .map(task => ({
                     id: task.id,
                     title: task.title || "Untitled Task",
@@ -123,7 +122,7 @@ function renderTasks(taskList) {
 }
 
 
-// Task redaktəsi üçün modalı açmaq
+
 function editTask(taskId) {
     const task = tasks.find((task) => task.id === taskId);
     taskTitleInput.value = task.title;
@@ -135,7 +134,7 @@ function editTask(taskId) {
 }
 
 
-// **Task yaratmaq və ya redaktə etmək**
+
 async function saveTask() {
     const title = taskTitleInput.value.trim();
     const description = taskDescriptionInput.value.trim();
@@ -165,10 +164,10 @@ async function saveTask() {
 
         if (!response.ok) throw new Error("Task saxlanmadı!");
 
-        const savedTask = await response.json(); // **Backend-in qaytardığı taskı yoxlayırıq**
+        const savedTask = await response.json();
         console.log("Yeni yaradılmış task:", savedTask);
 
-        setTimeout(fetchTasks, 500); // **500ms gecikmə ilə taskları yenilə**
+        setTimeout(fetchTasks, 500);
         closeCreateEditModal();
     } catch (error) {
         console.error("Error:", error);
@@ -176,7 +175,7 @@ async function saveTask() {
 }
 
 
-// **Taskı silmək**
+
 async function deleteTask(taskId) {
     if (!confirm("Bu tapşırığı silmək istədiyinizə əminsiniz?")) return;
 
@@ -190,7 +189,7 @@ async function deleteTask(taskId) {
 
         if (!response.ok) throw new Error("Task silinmədi!");
 
-        await fetchTasks(); // **Əllə array-dən silmək əvəzinə, serverdən yenilə**
+        await fetchTasks();
     } catch (error) {
         console.error("Xəta baş verdi:", error);
     }
@@ -214,12 +213,12 @@ async function toggleTaskCompletion(taskId, checkbox) {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("token")}`
             },
-            body: JSON.stringify(updatedTask) // **Bütün məlumatları göndəririk**
+            body: JSON.stringify(updatedTask)
         });
 
         if (!response.ok) throw new Error("Taskın tamamlanma statusu yenilənmədi!");
 
-        // Lokal massivi yenilə
+    
         const taskIndex = tasks.findIndex(t => t.id === taskId);
         if (taskIndex !== -1) {
             tasks[taskIndex] = updatedTask;
@@ -227,13 +226,13 @@ async function toggleTaskCompletion(taskId, checkbox) {
         }
     } catch (error) {
         console.error("Error:", error);
-        checkbox.checked = !checkbox.checked; // Əgər səhv olarsa, əvvəlki vəziyyətə qaytar
+        checkbox.checked = !checkbox.checked;
     }
 }
 
 
 
-// **Task detallarını göstərmək**
+
 function showTaskDetails(taskId) {
     const task = tasks.find((task) => task.id === taskId);
     if (!task) return;
@@ -244,7 +243,6 @@ function showTaskDetails(taskId) {
     taskDetailsModal.style.display = "flex";
 }
 
-// **Yeni task yaratmaq üçün modal açmaq**
 function openCreateModal() {
     taskTitleInput.value = "";
     taskDescriptionInput.value = "";
@@ -252,11 +250,9 @@ function openCreateModal() {
     taskModal.style.display = "flex";
 }
 
-// **Modal bağlamaq funksiyaları**
 function closeCreateEditModal() { taskModal.style.display = "none"; }
 function closeDetailsModal() { taskDetailsModal.style.display = "none"; }
 
-// **Axtarış funksiyası**
 function searchTasks() {
     const searchTerm = document.getElementById("searchInput").value.toLowerCase();
     const statusFilter = document.querySelector("input[name='statusFilter']:checked").value;
@@ -281,11 +277,9 @@ function logout() {
         }
     }).then(response => {
         if (response.ok) {
-            // **Token və username-i sil**
             localStorage.removeItem('token');
             localStorage.removeItem('username');
 
-            // **Login səhifəsinə yönləndir**
             window.location.href = 'http://localhost:63342/taskmanager/static/login.html';
         } else {
             console.error("Logout failed");
@@ -293,7 +287,7 @@ function logout() {
     }).catch(error => console.error("Error:", error));
 }
 
-let failedAttempts = 0; // Yanlış girişlərin sayını izləmək üçün
+let failedAttempts = 0;
 
 async function login() {
     const email = document.getElementById("email").value;
@@ -307,20 +301,19 @@ async function login() {
         });
 
         if (!response.ok) {
-            failedAttempts++; // Yanlış giriş sayını artır
+            failedAttempts++;
             document.getElementById("errorMessage").style.display = "block";
 
             if (failedAttempts >= 3) {
-                document.getElementById("forgot-password").style.display = "block"; // "Şifrəni unutmusunuz?" düyməsini göstər
+                document.getElementById("forgot-password").style.display = "block";
             }
         } else {
-            failedAttempts = 0; // Düzgün daxil olduqda sıfırla
+            failedAttempts = 0;
             const data = await response.json();
-            localStorage.setItem("token", data.token); // Yeni token saxla
+            localStorage.setItem("token", data.token);
             localStorage.setItem("username", data.username);
             console.log("Login successful:", data);
 
-            // Başqa səhifəyə yönləndirmək istəsən
             window.location.href = "http://localhost:63342/taskmanager/static/index.html";
         }
     } catch (error) {
@@ -359,14 +352,14 @@ async function register() {
             body: JSON.stringify({ username, password, email })
         });
 
-        const data = await response.text(); // Server text cavab qaytara bilər
+        const data = await response.text();
 
         if (!response.ok) {
             throw new Error(data || "Registration failed");
         }
 
         alert("Registration successful! Please check your email for confirmation.");
-        window.location.href = "login.html"; // Qeydiyyatdan sonra login səhifəsinə yönləndir
+        window.location.href = "login.html";
 
     } catch (error) {
         errorMessage.innerText = error.message;
